@@ -5,9 +5,17 @@ import { pipeline } from "@xenova/transformers";
 const client = new ChromaClient();
 
 let embedder: any;
-(async () => {
+
+// (async () => {
+//   embedder = await pipeline("feature-extraction", "sentence-transformers/all-MiniLM-L6-v2");
+// })();
+
+const initializeEmbedder = async () => {
   embedder = await pipeline("feature-extraction", "sentence-transformers/all-MiniLM-L6-v2");
-})();
+};
+
+// Initialize embedder before processing the API request
+await initializeEmbedder();
 
 class CustomEmbeddingFunction implements IEmbeddingFunction {
   async generate(input: string[]): Promise<number[][]> {
