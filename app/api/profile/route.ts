@@ -1,37 +1,45 @@
-import { NextResponse } from "next/server";
 import fetch from "node-fetch";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { pipeline } from '@xenova/transformers';
 
 const apiKey: string = "sk_e2028d62c58a7bb305d09d9b108d803b50f227dd";
 const googleApiKey: string = "AIzaSyDW_N1sUzq3wwmHE3z3qo3Y9N1a6sIAyRM";
 const genAi = new GoogleGenerativeAI(googleApiKey);
 
 interface ProfileResponse {
-  [key: string]: any; // Update this based on actual API response
+  [key: string]: any; // Adjust this based on actual API response structure
 }
 
-let pipe = await pipeline('sentiment-analysis');
-
-export async function GET() {
+const fetchProfile = async (): Promise<ProfileResponse | null> => {
   try {
-    const url = `https://api.scrapin.io/enrichment/profile?apikey=${apiKey}&linkedInUrl=https%3A%2F%2Fwww.linkedin.com%2Fin%2Fsyeda-umaiza-unsa-29a648287%2F`;
+    const linkedInUrl = `https%3A%2F%2Fwww.linkedin.com%2Fin%2Fsyeda-umaiza-unsa-29a648287%2F`
+    const url = `https://api.scrapin.io/enrichment/profile?apikey=${apiKey}&linkedInUrl=${linkedInUrl}`;
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch profile" }, { status: response.status });
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const profile: ProfileResponse = await response.json();
-    const model = genAi.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(
-      `Summarize this LinkedIn profile in a paragraph, mention achievements and include thenumber of years of each experience: ${JSON.stringify(profile)}`
-    );
-    const text = await result.response.text();
-    let out = await pipe(text)
-    return NextResponse.json({ vector: out }, { status: 200 });
+    return await response.json();
   } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error fetching profile:", error);
+    return null;
   }
-}
+};
+
+const generateContent = async (prompt: string): Promise<void> => {
+  try {
+    const model = genAi.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
+    const text = await result.response.text();
+    console.log("Generated Content:", text);
+  } catch (error) {
+    console.error("Error generating content:", error);
+  }
+};
+
+(async () => {
+  const profile = await fetchProfile();
+  if (profile) {
+    await generateContent(`Summarize this LinkedIn profile, give an elaborate and formatted response in about 400 words, and also mention the strong points of this profile as such: ${JSON.stringify(profile)}`);
+  }
+})();
