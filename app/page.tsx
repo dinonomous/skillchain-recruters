@@ -96,15 +96,14 @@ function App() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div className="relative">
+          <div className="relative w-1/2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
-              type="text"
-              placeholder="Search candidates..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+  type="text"
+  placeholder="Search candidates..."
+  className="pl-10 pr-4 py-2 border transition-all duration-500 border-gray-300 rounded-full w-32 focus:w-64"
+/>
+
           </div>
           <div className="flex items-center space-x-4">
             <Filter className="h-5 w-5 text-gray-500" />
@@ -122,10 +121,10 @@ function App() {
         </div>
 
         {/* Candidates List */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="">
           <div className="divide-y divide-gray-200">
             {filteredCandidates.map((candidate) => (
-              <div key={candidate.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={candidate.id} className="p-6 hover:bg-gray-300 transition-colors rounded-2xl shadow-lg border mb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4">
                     <img
