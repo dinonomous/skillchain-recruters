@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import fetch from "node-fetch";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey: string = "sk_8df84ba26fd3c3054148cfdf2a980ae39fdb426c";
-const googleApiKey: string = "AIzaSyDW_N1sUzq3wwmHE3z3qo3Y9N1a6sIAyRM";
+const apiKey: string = "";
+const googleApiKey: string = "";
 const genAi = new GoogleGenerativeAI(googleApiKey);
 
 interface ProfileResponse {
