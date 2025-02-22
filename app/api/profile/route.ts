@@ -1,3 +1,5 @@
+
+import { NextResponse } from "next/server";
 import fetch from "node-fetch";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -6,13 +8,14 @@ const googleApiKey: string = "AIzaSyDW_N1sUzq3wwmHE3z3qo3Y9N1a6sIAyRM";
 const genAi = new GoogleGenerativeAI(googleApiKey);
 
 interface ProfileResponse {
-  [key: string]: any; // Adjust this based on actual API response structure
+  [key: string]: any;
 }
 
-const fetchProfile = async (): Promise<ProfileResponse | null> => {
+const fetchProfile = async (linkedInUrl: string): Promise<ProfileResponse | null> => {
   try {
-    const linkedInUrl = `https%3A%2F%2Fwww.linkedin.com%2Fin%2Fsyeda-umaiza-unsa-29a648287%2F`
-    const url = `https://api.scrapin.io/enrichment/profile?apikey=${apiKey}&linkedInUrl=${linkedInUrl}`;
+    
+    const encodedUrl = encodeURIComponent(linkedInUrl);
+    const url = `https://api.scrapin.io/enrichment/profile?apikey=${apiKey}&linkedInUrl=${encodedUrl}`;
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
@@ -26,20 +29,37 @@ const fetchProfile = async (): Promise<ProfileResponse | null> => {
   }
 };
 
-const generateContent = async (prompt: string): Promise<void> => {
+// Function to generate AI-based profile summary
+const generateContent = async (profile: ProfileResponse): Promise<string | null> => {
   try {
     const model = genAi.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Summarize this LinkedIn profile, give an elaborate and formatted response in about 400 words, and also mention the strong points of this profile: ${JSON.stringify(profile)}`;
     const result = await model.generateContent(prompt);
-    const text = await result.response.text();
-    console.log("Generated Content:", text);
+    return await result.response.text();
   } catch (error) {
     console.error("Error generating content:", error);
+    return null;
   }
 };
 
-(async () => {
-  const profile = await fetchProfile();
-  if (profile) {
-    await generateContent(`Summarize this LinkedIn profile, give an elaborate and formatted response in about 400 words, and also mention the strong points of this profile as such: ${JSON.stringify(profile)}`);
+// Named export for GET request
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const linkedInUrl = searchParams.get("linkedInUrl");
+
+  if (!linkedInUrl) {
+    return NextResponse.json({ error: "Missing or invalid LinkedIn URL" }, { status: 400 });
   }
-})();
+
+  const profile = await fetchProfile(linkedInUrl);
+  if (!profile) {
+    return NextResponse.json({ error: "Failed to fetch profile data" }, { status: 500 });
+  }
+
+  const summary = await generateContent(profile);
+  if (!summary) {
+    return NextResponse.json({ error: "Failed to generate AI content" }, { status: 500 });
+  }
+
+  return NextResponse.json({ profile, summary }, { status: 200 });
+}
